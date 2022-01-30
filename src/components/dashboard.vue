@@ -13,7 +13,7 @@
           <td><br></td>
           <td><br></td>
         </tr>
-        <tr v-for="(userData,index) in $store.getters.signoutUser" :key="index">
+        <tr v-for="(userData,index) in $store.getters.receiveUsers" :key="index">
           <td class="user-name">{{userData}}</td>
           <td><button class="wallet-buttons">walletを見る</button></td>
           <td><button class="wallet-buttons">送る</button></td>

@@ -21,9 +21,9 @@ export default new Vuex.Store({
       user: '',
       wallet: ''
     },
-    signout: {
-      user: [],
-      wallet: []
+    receive: {
+      users: [],
+      wallets: []
     }
   },
   mutations: {
@@ -131,16 +131,24 @@ export default new Vuex.Store({
     getData({state}) {
       firebase.auth().onAuthStateChanged(signinUser => {
         const uid = signinUser.uid
-        firebase.firestore().collection('users').doc(uid).onSnapshot(doc => {
+        firebase.firestore().collection('users').doc(uid).get()
+        .then(doc => {
           state.signin.user = doc.data().user
           state.signin.wallet = doc.data().wallet
         })
-      })
-      firebase.firestore().collection('users').onSnapshot(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          state.signout.user.push(doc.data().user)
-          state.signout.wallet.push(doc.data().wallet)
+        .catch(error => {
+          console.error(error)
         })
+      })
+      firebase.firestore().collection('users').get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          state.receive.users.push(doc.data().user)
+          state.receive.wallets.push(doc.data().wallet)
+        })
+      })
+      .catch(error => {
+        console.error(error)
       })
     }
   },
@@ -166,11 +174,11 @@ export default new Vuex.Store({
     signinWallet: state => {
       return state.signin.wallet
     },
-    signoutUser: state => {
-      return state.signout.user
+    receiveUsers: state => {
+      return state.receive.users
     },
-    signoutWallet: state => {
-      return state.signout.wallet
+    receiveWallets: state => {
+      return state.receive.wallets
     }
   }
 })

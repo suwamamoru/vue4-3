@@ -18,12 +18,19 @@ export default new Vuex.Store({
       errorMessage: ''
     },
     signin: {
+      id: '',
       user: '',
       wallet: ''
     },
     receive: {
+      ids: [],
       users: [],
       wallets: []
+    },
+    update: {
+      currentId: '',
+      afterWallet: '',
+      totalWallet: ''
     }
   },
   mutations: {
@@ -41,6 +48,15 @@ export default new Vuex.Store({
     },
     setErrorMessage(state, errorMessage) {
       state.error.errorMessage = errorMessage
+    },
+    setCurrentId(state, computedCurrentId) {
+      state.update.currentId = computedCurrentId
+    },
+    setAfterWallet(state, computedAfterWallet) {
+      state.update.afterWallet = computedAfterWallet
+    },
+    setTotalWallet(state, computedTotalWallet) {
+      state.update.totalWallet = computedTotalWallet
     }
   },
   actions: {
@@ -129,26 +145,56 @@ export default new Vuex.Store({
       })
     },
     getData({state}) {
-      firebase.auth().onAuthStateChanged(signinUser => {
-        const uid = signinUser.uid
-        firebase.firestore().collection('users').doc(uid).get()
-        .then(doc => {
+      state.receive.ids = []
+      state.receive.users = []
+      state.receive.wallets = []
+      firebase.firestore().collection('users').where('email','==',state.input.email).get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          state.signin.id = doc.id
           state.signin.user = doc.data().user
           state.signin.wallet = doc.data().wallet
         })
-        .catch(error => {
-          console.error(error)
-        })
       })
-      firebase.firestore().collection('users').get()
+      .catch(error => {
+        console.error(error)
+      })
+      firebase.firestore().collection('users').where('email','!=',state.input.email).get()
       .then(querySnapshot => {
         querySnapshot.forEach(doc => {
+          state.receive.ids.push(doc.id)
           state.receive.users.push(doc.data().user)
           state.receive.wallets.push(doc.data().wallet)
         })
       })
       .catch(error => {
         console.error(error)
+      })
+    },
+    logout() {
+      firebase.auth().signOut()
+      .then(() => {
+        router.push('/login')
+      })
+      .catch(error => {
+        console.error(error)
+      })
+    },
+    getCurrentId: ({commit}, computedCurrentId) => {
+      commit('setCurrentId', computedCurrentId)
+    },
+    getAfterWallet: ({commit}, computedAfterWallet) => {
+      commit('setAfterWallet', computedAfterWallet)
+    },
+    getTotalWallet: ({commit}, computedTotalWallet) => {
+      commit('setTotalWallet', computedTotalWallet)
+    },
+    submit({state}) {
+      firebase.firestore().collection('users').doc(state.signin.id).update({
+        wallet: state.update.afterWallet
+      }),
+      firebase.firestore().collection('users').doc(state.update.currentId).update({
+        wallet: state.update.totalWallet
       })
     }
   },
@@ -168,17 +214,32 @@ export default new Vuex.Store({
     errorMessage: state => {
       return state.error.errorMessage
     },
+    signinId: state => {
+      return state.signin.id
+    },
     signinUser: state => {
       return state.signin.user
     },
     signinWallet: state => {
       return state.signin.wallet
     },
+    receiveIds: state => {
+      return state.receive.ids
+    },
     receiveUsers: state => {
       return state.receive.users
     },
     receiveWallets: state => {
       return state.receive.wallets
-    }
+    },
+    updateCurrentId: state => {
+      return state.update.currentId
+    },
+    updateAfterWallet: state => {
+      return state.update.afterWallet
+    },
+    updateTotalWallet: state => {
+      return state.update.totalWallet
+    },
   }
 })

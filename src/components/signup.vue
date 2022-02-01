@@ -17,7 +17,7 @@
           <td><input type="text" v-model="password" placeholder="Password"></td>
         </tr>
       </table>
-      <p class="error" v-show="errorShow">{{errorMessage}}</p>
+      <p class="error" v-show="errorShow">{{$store.getters.errorMessage}}</p>
       <div class="buttons">
         <button class="signup-btn" @click="signupInput()">新規登録</button>
         <br><router-link to="/login" class="login-guide">ログインはこちらから</router-link>
@@ -30,23 +30,7 @@
 </template>
 
 <script>
-import firebase from 'firebase'
-
 export default {
-  data() {
-    return {
-      users: [],
-      registration: {
-        user: '',
-        email: ''
-      },
-      errorShow: false,
-      errorMessage: 'このユーザーまたはメールアドレスは既に登録されています。'
-    }
-  },
-  created() {
-    this.getData()
-  },
   computed: {
     user: {
       get() {
@@ -71,34 +55,16 @@ export default {
       set(value) {
         this.$store.dispatch("getPassword", value)
       }
+    },
+    errorShow: {
+      get() {
+        return this.$store.getters.errorShow
+      }
     }
   },
   methods: {
-    getData() {
-      const db = firebase.firestore()
-      db.collection('users').onSnapshot((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          this.users.push(doc.data())
-          this.users.forEach(userData => {
-            this.registration.user = userData.user
-            this.registration.email = userData.email
-          })
-        })
-      })
-    },
     signupInput() {
-      this.getData()
-      if(this.registration.user === this.user || this.registration.email === this.email) {
-        this.errorShow = true
-        this.users = []
-        this.registration = {}
-        return
-      }
-      this.errorShow = false
       this.$store.dispatch('signupInput')
-      this.$router.push('/dashboard')
-      this.users = []
-      this.registration = {}
     }
   }
 }
